@@ -1,0 +1,52 @@
+{
+  "name": "trpc-grpc",
+  "version": "0.1.0",
+  "description": "gRPC transport link and server adapter for tRPC service-to-service communication",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "proto"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist coverage",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "example:microservices": "tsx examples/microservices/run-demo.ts",
+    "example:microservices:user": "tsx examples/microservices/user-service.ts",
+    "example:microservices:order": "tsx examples/microservices/order-service.ts"
+  },
+  "keywords": [
+    "trpc",
+    "grpc",
+    "transport",
+    "microservices"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@trpc/client": "^11.16.0",
+    "@trpc/server": "^11.16.0"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.14.3"
+  },
+  "devDependencies": {
+    "@trpc/client": "^11.16.0",
+    "@trpc/server": "^11.16.0",
+    "@types/node": "^24.6.0",
+    "superjson": "^2.2.2",
+    "tsx": "^4.20.6",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.4",
+    "zod": "^4.1.12"
+  }
+}
