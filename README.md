@@ -1,4 +1,4 @@
-# trpc-to-grpc
+# trpc-over-grpc
 
 Use gRPC as the transport for tRPC when one service calls another.
 
