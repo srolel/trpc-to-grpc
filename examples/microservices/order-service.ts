@@ -53,15 +53,7 @@ export async function startOrderService(opts?: {
   });
 
   const router: OrderServiceRouter = createOrderServiceRouter({
-    async getUserById(input, context) {
-      return await userServiceClient.userById.query(input, {
-        context: {
-          grpcMetadata: {
-            'x-request-id': context.requestId ?? 'missing-request-id',
-          },
-        },
-      });
-    },
+    userService: userServiceClient,
   });
 
   const server = new grpc.Server();

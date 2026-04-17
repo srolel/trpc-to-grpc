@@ -1,25 +1,17 @@
+import type { inferRouterClient } from '@trpc/client';
 import { TRPCError, initTRPC } from '@trpc/server';
 import superjson from 'superjson';
 import { z } from 'zod';
+import type { UserServiceRouter } from './user-service.contract.js';
 
 export interface OrderServiceContext {
   requestId: string | null;
 }
 
-export interface OrderServiceUserRecord {
-  id: string;
-  name: string;
-  tier: string;
-  requestId: string | null;
-  callerService: string | null;
-  fetchedAt: Date;
-}
+type UserServiceClient = inferRouterClient<UserServiceRouter>;
 
 export interface OrderServiceDependencies {
-  getUserById: (
-    input: { id: string },
-    opts: { requestId: string | null },
-  ) => Promise<OrderServiceUserRecord>;
+  userService: Pick<UserServiceClient, 'userById'>;
 }
 
 const t = initTRPC.context<OrderServiceContext>().create({
@@ -61,9 +53,15 @@ export function createOrderServiceRouter(deps: OrderServiceDependencies) {
           });
         }
 
-        const user = await deps.getUserById(
+        const user = await deps.userService.userById.query(
           { id: order.userId },
-          { requestId: ctx.requestId },
+          {
+            context: {
+              grpcMetadata: {
+                'x-request-id': ctx.requestId ?? 'missing-request-id',
+              },
+            },
+          },
         );
 
         return {

@@ -5,6 +5,7 @@ This example spins up two tRPC microservices that talk to each other over gRPC:
 - `user-service` exposes `userById`
 - `order-service` exposes `orderSummaryById`
 - `order-service` calls `user-service` using `grpcLink(...)`
+- inside `order-service`, the downstream call is made with the normal tRPC client shape: `userService.userById.query(...)`
 
 ## Run the full demo
 
