@@ -1,4 +1,4 @@
-# trpc-grpc
+# trpc-to-grpc
 
 Use gRPC as the transport for tRPC when one service calls another.
 
@@ -27,12 +27,12 @@ BENCH_WARMUP=10 BENCH_ITERATIONS=50 BENCH_CONCURRENCY=16 npm run benchmark:trans
 
 Sample local result from that smoke run on loopback, comparing `grpcLink(...)` vs `httpLink(...)` on the same router, resolver, and `superjson` transformer:
 
-| Scenario | httpLink req/s | grpcLink req/s | Throughput delta | Avg latency delta |
-| --- | ---: | ---: | ---: | ---: |
-| tiny sequential | 1698.03 | 1805.48 | +6.33% | -5.73% |
-| tiny concurrent | 1964.27 | 4179.58 | +112.78% | -50.31% |
-| medium sequential | 1658.81 | 1785.40 | +7.63% | -7.10% |
-| medium concurrent | 1602.74 | 2630.18 | +64.11% | -36.12% |
+| Scenario          | httpLink req/s | grpcLink req/s | Throughput delta | Avg latency delta |
+| ----------------- | -------------: | -------------: | ---------------: | ----------------: |
+| tiny sequential   |        1698.03 |        1805.48 |           +6.33% |            -5.73% |
+| tiny concurrent   |        1964.27 |        4179.58 |         +112.78% |           -50.31% |
+| medium sequential |        1658.81 |        1785.40 |           +7.63% |            -7.10% |
+| medium concurrent |        1602.74 |        2630.18 |          +64.11% |           -36.12% |
 
 Treat these as microbenchmark numbers for the current implementation, not universal production results. This package currently uses **gRPC transport + JSON-serialized tRPC envelopes**, not protobuf payloads yet.
 
@@ -60,10 +60,10 @@ npm install trpc-grpc
 ## Server
 
 ```ts
-import * as grpc from '@grpc/grpc-js';
-import { initTRPC } from '@trpc/server';
-import superjson from 'superjson';
-import { addTRPCToGRPCServer } from 'trpc-grpc';
+import * as grpc from "@grpc/grpc-js";
+import { initTRPC } from "@trpc/server";
+import superjson from "superjson";
+import { addTRPCToGRPCServer } from "trpc-grpc";
 
 const t = initTRPC
   .context<{ authHeader: string | null }>()
@@ -72,17 +72,17 @@ const t = initTRPC
 export const appRouter = t.router({
   userById: t.procedure
     .input((value: unknown) => {
-      if (!value || typeof value !== 'object' || !("id" in value)) {
-        throw new Error('Invalid input');
+      if (!value || typeof value !== "object" || !("id" in value)) {
+        throw new Error("Invalid input");
       }
       return value as { id: string };
     })
     .query(({ input, ctx }) => {
       return {
         id: input.id,
-        name: 'Ada Lovelace',
+        name: "Ada Lovelace",
         authHeader: ctx.authHeader,
-        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        createdAt: new Date("2024-01-01T00:00:00.000Z"),
       };
     }),
 });
@@ -92,17 +92,17 @@ const server = new grpc.Server();
 addTRPCToGRPCServer(server, {
   router: appRouter,
   createContext({ metadata }) {
-    const auth = metadata.get('authorization')[0];
+    const auth = metadata.get("authorization")[0];
 
     return {
-      authHeader: typeof auth === 'string' ? auth : null,
+      authHeader: typeof auth === "string" ? auth : null,
     };
   },
 });
 
 await new Promise<number>((resolve, reject) => {
   server.bindAsync(
-    '0.0.0.0:50051',
+    "0.0.0.0:50051",
     grpc.ServerCredentials.createInsecure(),
     (error, port) => {
       if (error) {
@@ -118,39 +118,42 @@ await new Promise<number>((resolve, reject) => {
 ## Client
 
 ```ts
-import * as grpc from '@grpc/grpc-js';
-import { createTRPCClient } from '@trpc/client';
-import superjson from 'superjson';
-import { grpcLink } from 'trpc-grpc';
-import type { appRouter } from './user-service';
+import * as grpc from "@grpc/grpc-js";
+import { createTRPCClient } from "@trpc/client";
+import superjson from "superjson";
+import { grpcLink } from "trpc-grpc";
+import type { appRouter } from "./user-service";
 
 type AppRouter = typeof appRouter;
 
 const client = createTRPCClient<AppRouter>({
   links: [
     grpcLink({
-      address: 'users.internal:50051',
+      address: "users.internal:50051",
       credentials: grpc.credentials.createInsecure(),
       transformer: superjson,
       metadata() {
         return {
-          authorization: 'Bearer service-token',
+          authorization: "Bearer service-token",
         };
       },
     }),
   ],
 });
 
-const user = await client.userById.query({ id: 'user_123' }, {
-  context: {
-    grpcMetadata: {
-      'x-trace-id': 'trace-123',
-    },
-    grpcCallOptions: {
-      deadline: Date.now() + 1_000,
+const user = await client.userById.query(
+  { id: "user_123" },
+  {
+    context: {
+      grpcMetadata: {
+        "x-trace-id": "trace-123",
+      },
+      grpcCallOptions: {
+        deadline: Date.now() + 1_000,
+      },
     },
   },
-});
+);
 ```
 
 ## Microservice example
